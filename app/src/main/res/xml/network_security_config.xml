@@ -5,7 +5,7 @@
     cleartext-HTTP standaard vanaf API 28.
 
     De endpoint (IP-adres of *.ts.net hostname) is door de gebruiker instelbaar in het
-    Settings-scherm -- Android's network-security-config ondersteunt geen CIDR-ranges
+    Settings-scherm; Android's network-security-config ondersteunt geen CIDR-ranges
     voor IP-adressen, dus een statische domain-config kan niet elk mogelijk Tailscale-IP
     (100.64.0.0/10) of LAN-IP vooraf dekken.
 
