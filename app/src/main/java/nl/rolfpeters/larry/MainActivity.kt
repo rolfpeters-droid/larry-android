@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,12 +12,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 import nl.rolfpeters.larry.ui.chat.ChatScreen
 import nl.rolfpeters.larry.ui.chat.ChatViewModel
 import nl.rolfpeters.larry.ui.chat.ChatViewModelFactory
@@ -28,7 +29,6 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    private var textToSpeech: TextToSpeech? = null
     private var lastSpokenMessageId: Long = -1
 
     private val requestAudioPermission = registerForActivityResult(
@@ -50,18 +50,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        textToSpeech = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                textToSpeech?.language = Locale.getDefault()
-            }
-        }
-
         val app = application as LarryApplication
 
         setContent {
             LarryTheme {
                 val navController = rememberNavController()
                 var voiceInputResult by remember { mutableStateOf<String?>(null) }
+                val scope = rememberCoroutineScope()
 
                 onVoiceResult = { text -> voiceInputResult = text }
 
@@ -76,14 +71,16 @@ class MainActivity : ComponentActivity() {
                         )
                         val uiState by viewModel.uiState.collectAsState()
 
-                        // Spreek Larry's laatste antwoord uit als TTS aanstaat
+                        // Spreek Larry's laatste antwoord uit als TTS aanstaat -- gebruikt de
+                        // door de gebruiker gekozen stem + spreeksnelheid (TtsController leest
+                        // die zelf uit SettingsStore bij elke aanroep).
                         LaunchedEffect(uiState.messages.size, uiState.ttsEnabled) {
                             val lastAssistantMessage = uiState.messages.lastOrNull { it.role == "assistant" }
                             if (uiState.ttsEnabled && lastAssistantMessage != null &&
                                 lastAssistantMessage.id != lastSpokenMessageId
                             ) {
                                 lastSpokenMessageId = lastAssistantMessage.id
-                                speak(lastAssistantMessage.content)
+                                scope.launch { app.ttsController.speak(lastAssistantMessage.content) }
                             }
                         }
 
@@ -107,6 +104,7 @@ class MainActivity : ComponentActivity() {
                         )
                         SettingsScreen(
                             settingsStore = app.settingsStore,
+                            ttsController = app.ttsController,
                             onBack = { navController.popBackStack() },
                             onClearHistory = { viewModel.clearHistory() },
                         )
@@ -131,13 +129,10 @@ class MainActivity : ComponentActivity() {
         runCatching { speechRecognizerLauncher.launch(intent) }
     }
 
-    private fun speak(text: String) {
-        textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "larry_reply")
-    }
-
     override fun onDestroy() {
-        textToSpeech?.stop()
-        textToSpeech?.shutdown()
+        // TtsController leeft op Application-niveau (blijft dus bestaan over Activity-herstarts
+        // heen, bijv. bij schermrotatie) -- alleen stoppen, niet shutdown hier.
+        (application as LarryApplication).ttsController.stop()
         super.onDestroy()
     }
 }
