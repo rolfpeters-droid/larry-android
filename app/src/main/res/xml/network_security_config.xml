@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Larry draait over gewone HTTP binnen het Tailscale-tailnet (WireGuard-versleuteld
+    op netwerkniveau, dus geen TLS nodig op applicatieniveau). Android blokkeert
+    cleartext-HTTP standaard vanaf API 28.
+
+    De endpoint (IP-adres of *.ts.net hostname) is door de gebruiker instelbaar in het
+    Settings-scherm -- Android's network-security-config ondersteunt geen CIDR-ranges
+    voor IP-adressen, dus een statische domain-config kan niet elk mogelijk Tailscale-IP
+    (100.64.0.0/10) of LAN-IP vooraf dekken.
+
+    Voor deze Fase 1/POC (persoonlijk gebruik, geen Play Store-distributie, uitsluitend
+    bedoeld voor verbinding met eigen Tailscale-tailnet of thuisnetwerk) staan we cleartext
+    daarom breed toe. Dit is bewust en behoort NIET zomaar gekopieerd te worden naar een
+    publiek-gedistribueerde app.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

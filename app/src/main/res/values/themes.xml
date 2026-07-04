@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basisthema voor de Activity-shell; de daadwerkelijke UI-theming (RP Design System
+         kleuren) gebeurt in Compose via ui/theme/Theme.kt, niet hier. -->
+    <style name="Theme.Larry" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
