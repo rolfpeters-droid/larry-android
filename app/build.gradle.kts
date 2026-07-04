@@ -58,6 +58,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    // Basis material-icons-core bevat maar een handvol iconen (o.a. Send, Settings, ArrowBack).
+    // Mic/VolumeUp/VolumeOff zitten in de uitgebreide set -- aparte dependency nodig.
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.8.4")
 
     // Room (lokale chatgeschiedenis)

@@ -96,19 +96,19 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("settings") {
+                        // viewModel() is zelf @Composable -- moet hier opgehaald worden (compose-context),
+                        // niet binnen de onClearHistory-lambda (die is een gewone click-handler, geen @Composable-scope).
+                        val viewModel: ChatViewModel = viewModel(
+                            factory = ChatViewModelFactory(
+                                chatDao = app.database.chatDao(),
+                                apiClient = app.apiClient,
+                                settingsStore = app.settingsStore,
+                            ),
+                        )
                         SettingsScreen(
                             settingsStore = app.settingsStore,
                             onBack = { navController.popBackStack() },
-                            onClearHistory = {
-                                val viewModel: ChatViewModel = viewModel(
-                                    factory = ChatViewModelFactory(
-                                        chatDao = app.database.chatDao(),
-                                        apiClient = app.apiClient,
-                                        settingsStore = app.settingsStore,
-                                    ),
-                                )
-                                viewModel.clearHistory()
-                            },
+                            onClearHistory = { viewModel.clearHistory() },
                         )
                     }
                 }
